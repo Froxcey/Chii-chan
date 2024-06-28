@@ -1,0 +1,19 @@
+{
+  "name": "chii-chan",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/luxon": "^3.4.2",
+    "typescript": "^5.5.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "better-logging": "^5.0.0",
+    "luxon": "^3.4.4",
+    "oceanic.js": "^1.11.0",
+    "ts-results-es": "^4.2.0"
+  }
+}
