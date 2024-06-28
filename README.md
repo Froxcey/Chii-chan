@@ -1,4 +1,4 @@
-# chii-chan
+# Chii-chan
 
 A simple anime Discord bot
 
@@ -7,6 +7,7 @@ A simple anime Discord bot
 - Show airing schedules
 - Follow and get tagged for airing shows
 - Create threads for discussions
+
 Simple innit?
 
 ## Running
@@ -17,7 +18,7 @@ Simple innit?
 3. Fill in your .env file
 4. `bun .`
 
-Interested in this bot? Join my new [ACG Discord server](https://www.lipsum.com/)!
+Interested? Join my new [ACG Discord server](https://www.lipsum.com/)!
 
 ## To-do
 
