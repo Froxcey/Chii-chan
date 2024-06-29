@@ -9,7 +9,6 @@ import {
   type Client,
 } from "oceanic.js";
 import { Err, Ok } from "ts-results-es";
-import { Statement } from "bun:sqlite";
 import { isAdmin, sendError, sendSuccess } from "../utils";
 
 let queries: ExtraData["database"]["queries"];

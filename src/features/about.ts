@@ -4,6 +4,7 @@ import {
   InteractionTypes,
   type Client,
 } from "oceanic.js";
+import { randomAvatar } from "../utils";
 
 export default function about(client: Client) {
   console.info("Registering drop command");
@@ -37,6 +38,10 @@ export default function about(client: Client) {
               inline: true,
             },
           ],
+          author: {
+            iconURL: randomAvatar(),
+            name: "ちー bot",
+          },
           footer: {
             iconURL:
               "https://media1.tenor.com/m/NOkXno0KD4AAAAAC/girls-last-tour-chito.gif",

@@ -8,7 +8,7 @@ import {
   TextChannel,
   type Client,
 } from "oceanic.js";
-import { sendError, sendSuccess } from "../../utils";
+import { isAdmin, sendError, sendSuccess } from "../../utils";
 
 let queries: ExtraData["database"]["queries"];
 
@@ -46,6 +46,12 @@ export default function rm(client: Client, extraData: ExtraData) {
     if (interaction.data.name != "rm") return;
 
     interaction.defer();
+
+    if (!(await isAdmin(interaction.member!.id, extraData.defaultData.guild)))
+      return sendError(interaction, [
+        "Insufficient permission",
+        "You don't have the permission to remove entries",
+      ]);
 
     const role = interaction.data.options.getRole("role", true);
     if (

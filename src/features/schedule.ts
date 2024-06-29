@@ -6,7 +6,7 @@ import {
   type Client,
   type Embed,
 } from "oceanic.js";
-import { getLimit, sendError } from "../utils";
+import { getLimit, randomAvatar, sendError } from "../utils";
 import { Err, Ok } from "ts-results-es";
 import { DateTime } from "luxon";
 
@@ -70,7 +70,7 @@ export async function scheduleApi(today: boolean): AsyncRes<Embed> {
 
   const query = `{
     Page(perPage: 25) {
-      airingSchedules(notYetAired: true, isAdult: false${today ? `, airingAt_lesser: ${limit.getTime() / 1000}` : ""}) {
+      airingSchedules(notYetAired: true${today ? `, airingAt_lesser: ${limit.getTime() / 1000}` : ""}) {
         airingAt
         episode
         media {
@@ -112,7 +112,10 @@ export async function scheduleApi(today: boolean): AsyncRes<Embed> {
   const embed: Embed = {
     title: (today ? "Today's" : "Upcoming") + " airing schedule",
     description: today
-      ? DateTime.now().setZone("Asia/Tokyo").toFormat("ccc LLL LL y")
+      ? DateTime.now()
+          .setZone("Asia/Tokyo")
+          .minus({ hour: 6 })
+          .toFormat("ccc LLL dd y")
       : undefined,
     fields: schedule.map((doc) => ({
       name: doc.media.title.native || doc.media.title.english,
@@ -127,6 +130,10 @@ export async function scheduleApi(today: boolean): AsyncRes<Embed> {
       text: "Provided by Anilist",
       iconURL:
         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/AniList_logo.svg/240px-AniList_logo.svg.png",
+    },
+    author: {
+      iconURL: randomAvatar(),
+      name: "ちー bot",
     },
   };
 

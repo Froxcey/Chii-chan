@@ -10,7 +10,7 @@ import {
   type EmbedField,
 } from "oceanic.js";
 import { Err, Ok } from "ts-results-es";
-import { htmlToMd, isAdmin, sendError } from "../utils";
+import { htmlToMd, isAdmin, randomAvatar, sendError } from "../utils";
 import { getFollowRole, followSuccess } from "./follow";
 
 export default function info(client: Client) {
@@ -252,6 +252,10 @@ export async function api(id: number): AsyncRes<Embed> {
     thumbnail: { url: info.coverImage.medium },
     fields,
     url: info.siteUrl,
+    author: {
+      iconURL: randomAvatar(),
+      name: "ちー bot",
+    },
     footer: {
       text: "Provided by Anilist",
       iconURL:

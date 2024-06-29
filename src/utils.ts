@@ -60,6 +60,10 @@ export async function sendError(
         image: {
           url: await sorry(),
         },
+        author: {
+          iconURL: randomAvatar(),
+          name: "ちー bot",
+        },
       },
     ],
   });
@@ -86,8 +90,34 @@ export async function sendSuccess(
         color: 0x98971a,
         title: "Success!",
         fields: [{ name: title, value: msg || "" }],
+        author: {
+          iconURL: randomAvatar(),
+          name: "ちー bot",
+        },
       },
     ],
   });
   return;
+}
+
+export function randomAvatar() {
+  const list = [
+    "https://media1.tenor.com/m/uHZqHZ6Az5kAAAAC/chito-girls-last-tour.gif",
+    "https://media1.tenor.com/m/DfSSCH359IUAAAAC/girls-last.gif",
+    "https://media1.tenor.com/m/l3_3giS_gOwAAAAC/girls-last.gif",
+    "https://media1.tenor.com/m/vz9evNg6pNoAAAAC/glt-girls-last-tour.gif",
+    "https://media1.tenor.com/m/Qr3RDQwE0o0AAAAC/girls-last-tour-shoujo-shuumatsu-ryokou.gif",
+    "https://media.tenor.com/maQP4uWiYGIAAAAM/girls-last-tour-shojo-shumatsu-ryoko.gif",
+    "https://media.tenor.com/k2v-p3IT3IkAAAAM/shoujo-shuumatsu-ryokou-girls-last-tour.gif",
+    "https://media.tenor.com/IyNEwxYXDY4AAAAM/nuko-cut.gif",
+    "https://media.tenor.com/JbLFDKdAwq0AAAAM/ok.gif",
+    "https://media.tenor.com/uKVf2mPx7swAAAAM/shoujo-shuumatsu-ryokou-girls-last-tour.gif",
+    "https://media.tenor.com/wuaoWQYaOxIAAAAM/dab-off-dabbing.gif",
+    "https://media.tenor.com/vtnTPecZ-2oAAAAM/girls-last.gif",
+    "https://media.tenor.com/Y_aIkljw-dIAAAAM/shoujo-shuumatsu.gif",
+    "https://media.tenor.com/Zi2uijzcUAoAAAAM/nuko-girls-last-tour.gif",
+    "https://media1.tenor.com/m/X857uqEegLcAAAAC/girls-last-tour-yuuri-nuko-rub-girls-last-tour.gif",
+    "https://media1.tenor.com/m/QIWhINf2HfEAAAAC/memowies-girls-last-tour.gif",
+  ];
+  return list[Math.round(Math.random() * (list.length - 1)) + 1];
 }

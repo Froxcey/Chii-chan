@@ -1,4 +1,4 @@
-import { Client, InteractionTypes } from "oceanic.js";
+import { Client } from "oceanic.js";
 
 export default function autocomplete(client: Client) {
   console.info("Autocomplete registered");
