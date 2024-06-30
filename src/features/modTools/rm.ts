@@ -108,5 +108,6 @@ export function softDelete(
     ],
   });
   role.edit({ color: 0x151f2e });
-  queries.toArchive.run(doc.id);
+  queries.toArchive1.run(doc.id);
+  queries.toArchive2.run(doc.id);
 }

@@ -33,7 +33,6 @@ export function getLimit() {
   const now = new Date(),
     next = new Date();
   next.setUTCHours(21, 0, 0, 0);
-  //next.setHours(14, 20, 0, 0);
   now >= next && next.setDate(now.getDate() + 1);
   return next;
 }
@@ -43,6 +42,13 @@ export function htmlToMd(text: string) {
     .replaceAll("<br>", "")
     .replaceAll("<i>", "*")
     .replaceAll("</i>", "*");
+}
+
+export function trimString(str: string, maxLength = 1024) {
+  if (str.length > maxLength - 3) {
+    return str.slice(0, maxLength - 3) + "...";
+  }
+  return str;
 }
 
 export async function sendError(

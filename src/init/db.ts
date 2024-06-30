@@ -10,24 +10,22 @@ export default function db() {
   return {
     db: db,
     queries: {
-      listFind: db.query("SELECT * FROM list WHERE id = $1;"),
-      listFindRole: db.query("SELECT * FROM list WHERE role = $1;"),
+      listFind: db.query("SELECT * FROM list WHERE id = ?1;"),
+      listFindRole: db.query("SELECT * FROM list WHERE role = ?1;"),
       listInsert: db.query(
         "INSERT INTO list (id, role, nextEp, nextTime, title) VALUES (?1, ?2, ?3, ?4, ?5);",
       ),
       listAll: db.query("SELECT * FROM list;"),
       listUpdate: db.query(
-        "UPDATE list SET nextEp = $2, nextTime = $3, title = $4 WHERE id = $1;",
+        "UPDATE list SET nextEp = ?2, nextTime = ?3, title = ?4 WHERE id = ?1;",
       ),
       listDelRole: db.query("DELETE FROM list WHERE role = ?1;"),
-      toArchive: db.query(`
-        BEGIN TRANSACTION;
-        INSERT INTO archive (id, role) SELECT id, role FROM list WHERE id = $1;
-        DELETE FROM list WHERE id = ?1;
-        COMMIT;
-      `),
-      archiveFind: db.query("SELECT * FROM archive WHERE id = $1;"),
-      archiveFindRole: db.query("SELECT * FROM archive WHERE role = $1;"),
+      toArchive1: db.query(
+        `INSERT INTO archive (id, role) SELECT id, role FROM list WHERE id = ?1;`,
+      ),
+      toArchive2: db.query(`DELETE FROM list WHERE id = ?1;`),
+      archiveFind: db.query("SELECT * FROM archive WHERE id = ?1;"),
+      archiveFindRole: db.query("SELECT * FROM archive WHERE role = ?1;"),
       archiveInsert: db.query(
         "INSERT INTO archive (id, role) VALUES (?1, ?2);",
       ),

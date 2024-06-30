@@ -29,29 +29,8 @@ client.on("ready", async () => {
   };
 
   registerCmd(client, extraData);
-  scheduler(client, extraData);
-
-  //initScheduler(client);
-
-  /* (await client.application.getGlobalCommands()).forEach((cmd) => {
-      client.application.deleteGlobalCommand(cmd.id);
-      });*/
+  scheduler(extraData);
 });
-
-/*client.on("interactionCreate", async (interaction) => {
-  if (interaction.type != InteractionTypes.MESSAGE_COMPONENT) return;
-  const id = interaction.data.customID;
-  if (id == "dismiss") interaction.message.delete();
-  if (id.startsWith("rmrol:")) {
-    const roleID = id.replace("rmrol:", "");
-    (await getRole(roleID)).delete();
-    del(roleID);
-  }
-  if (id.startsWith("foll:")) {
-    const entry = id.replace("foll:", "");
-    follow(id, nextEp, nextTime, title, name);
-  }
-});*/
 
 client.on("error", (err) => {
   console.error("Something Broke!", err);

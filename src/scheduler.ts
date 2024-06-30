@@ -4,11 +4,15 @@ import { scheduleApi } from "./features/schedule";
 import { Err, Ok } from "ts-results-es";
 import { softDelete } from "./features/modTools/rm";
 
-export default function scheduler(client: Client, extraData: ExtraData) {
-  const guild = extraData.defaultData.guild;
+let started = false;
+
+export default function scheduler(extraData: ExtraData) {
   const forum = extraData.defaultData.forum;
   const channel = extraData.defaultData.channel;
   const modChannel = extraData.defaultData.modChannel;
+
+  if (started) return;
+  started = true;
 
   console.log(
     "Available forum tags:",
@@ -44,6 +48,7 @@ export default function scheduler(client: Client, extraData: ExtraData) {
         channel.createMessage({
           content: `> Episode \`${doc.nextEp}\` of ${role.mention} just aired\n`,
         });
+        return;
         forum.startThread({
           name: `${doc.title} ep ${doc.nextEp} discussion`,
           message: {

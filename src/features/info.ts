@@ -10,7 +10,13 @@ import {
   type EmbedField,
 } from "oceanic.js";
 import { Err, Ok } from "ts-results-es";
-import { htmlToMd, isAdmin, randomAvatar, sendError } from "../utils";
+import {
+  htmlToMd,
+  isAdmin,
+  randomAvatar,
+  sendError,
+  trimString,
+} from "../utils";
 import { getFollowRole, followSuccess } from "./follow";
 
 export default function info(client: Client) {
@@ -105,6 +111,7 @@ export async function api(id: number): AsyncRes<Embed> {
     season: "WINTER" | "SPRING" | "SUMMER" | "FALL";
     seasonYear: number;
     episodes: number;
+    source: string;
     trailer: {
       site: string;
       id: string;
@@ -122,6 +129,30 @@ export async function api(id: number): AsyncRes<Embed> {
     };
     isAdult: boolean;
     siteUrl: string;
+    characters: {
+      edges: [
+        {
+          node: { name: { full: string } };
+          voiceActors: [
+            {
+              name: { full: string };
+            },
+          ];
+        },
+      ];
+    };
+    staff: {
+      edges: [
+        {
+          role: "Director " | "Music" | string;
+          node: {
+            name: {
+              full: string;
+            };
+          };
+        },
+      ];
+    };
   } & (
     | {
         status: "RELEASING" | "NOT_YET_RELEASED";
@@ -155,6 +186,7 @@ export async function api(id: number): AsyncRes<Embed> {
       }
       genres
       meanScore
+      source
       studios(isMain: true) {
         nodes {
           name
@@ -165,6 +197,30 @@ export async function api(id: number): AsyncRes<Embed> {
         timeUntilAiring
       }
       siteUrl
+      characters(perPage: 6, role: MAIN) {
+        edges {
+          node {
+            name {
+              full
+            }
+          }
+          voiceActors(language: JAPANESE) {
+            name {
+              full
+            }
+          }
+        }
+      }
+      staff {
+        edges {
+          role
+          node {
+            name {
+              full
+            }
+          }
+        }
+      }
     }
   }`;
 
@@ -195,7 +251,7 @@ export async function api(id: number): AsyncRes<Embed> {
     },
     {
       name: "Description",
-      value: htmlToMd(info.description),
+      value: trimString(htmlToMd(info.description)),
     },
   ];
   if (info.isAdult)
@@ -206,21 +262,25 @@ export async function api(id: number): AsyncRes<Embed> {
     });
 
   if (info.status == "RELEASING") {
-    let daysLeft = Math.floor(info.nextAiringEpisode?.timeUntilAiring / 86400);
     fields.push({
       name: "Next episode",
-      value: daysLeft == 0 ? "Today" : daysLeft + " Days",
+      value: `<t:${info.nextAiringEpisode!.timeUntilAiring}:R>`,
       inline: true,
     });
   } else
     fields.push({
       name: "Season",
-      value: info.season + " " + info.seasonYear,
+      value: (info.season || "--") + " " + (info.seasonYear || "--"),
       inline: true,
     });
 
   fields.push(
     { name: "Format", value: info.format, inline: true },
+    {
+      name: "Source",
+      value: info.source.toLowerCase().replaceAll("_", " "),
+      inline: true,
+    },
     {
       name: "Episodes",
       value: info.episodes?.toString() || "--",
@@ -228,13 +288,30 @@ export async function api(id: number): AsyncRes<Embed> {
     },
     {
       name: "Studio",
-      value: info.studios.nodes[0]?.name || "Unknown",
+      value: info.studios.nodes[0]?.name || "--",
       inline: true,
     },
     {
       name: "Rating",
-      value: info.meanScore + "%",
+      value: (info.meanScore || "--") + "%",
       inline: true,
+    },
+
+    {
+      name: "Staffs",
+      value: info.staff.edges
+        .filter((s) => s.role.trim() == "Director" || s.role.trim() == "Music")
+        .map((s) => `${s.role.trim()}: ${s.node.name.full}`)
+        .join("\n"),
+    },
+    {
+      name: "VAs",
+      value: info.characters.edges
+        .map(
+          (c) =>
+            `${c.node.name.full}: ${c.voiceActors.map((a) => a.name.full).join(", ") || "--"}`,
+        )
+        .join("\n"),
     },
     {
       name: "More info",
