@@ -1,39 +1,38 @@
 import { Client } from "oceanic.js";
 import registerCmd from "./features";
-import betterLogging from "better-logging";
-import { DateTime } from "luxon";
 import db from "./init/db";
 import defaultData from "./init/defaultData";
 import scheduler from "./scheduler";
+import TaskLogger from "./task-logger";
+
+const logger = new TaskLogger();
+const initTask = logger.createTask("init", "Logging onto Discord");
 
 const client = new Client({
   auth: `Bot ${process.env.TOKEN}`,
   gateway: { intents: ["GUILDS"] },
 });
 
-client.on("ready", async () => {
-  betterLogging(console, {
-    saveToFile: `logs/${DateTime.now().toFormat("yyLLdd-HHmmss")}.log`,
-  });
-  console.log("Ready as", client.user.tag);
+client.setMaxListeners(20);
 
-  const data = await defaultData(client);
+client.on("ready", async () => {
+  const data = await defaultData(client, initTask);
 
   const extraData = {
     database: db(),
     defaultData: data,
+    logger,
     getRole: async function (id: string) {
       const roles = await data.guild.getRoles();
       return roles.findLast((r) => r.id == id)!;
     },
   };
 
-  registerCmd(client, extraData);
-  scheduler(extraData);
-});
+  registerCmd(client, extraData, initTask);
 
-client.on("error", (err) => {
-  console.error("Something Broke!", err);
+  scheduler(extraData, initTask);
+
+  initTask.success("Running as", client.user.tag);
 });
 
 client.connect();

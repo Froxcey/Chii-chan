@@ -6,9 +6,7 @@ import {
 } from "oceanic.js";
 import { randomAvatar } from "../utils";
 
-export default function about(client: Client) {
-  console.info("Registering drop command");
-
+export default function about(client: Client, extraData: ExtraData) {
   client.application.createGlobalCommand({
     type: ApplicationCommandTypes.CHAT_INPUT,
     name: "about",
@@ -20,7 +18,12 @@ export default function about(client: Client) {
     if (interaction.type != InteractionTypes.APPLICATION_COMMAND) return;
     if (interaction.data.name != "about") return;
 
-    interaction.reply({
+    const task = extraData.logger.createTask(
+      "about",
+      "Responding to request from",
+      interaction.user.id,
+    );
+    await interaction.reply({
       embeds: [
         {
           title: "About me",
@@ -50,5 +53,6 @@ export default function about(client: Client) {
         },
       ],
     });
+    task.success("Response sent to ", interaction.user.id);
   });
 }

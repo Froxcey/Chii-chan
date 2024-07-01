@@ -10,18 +10,11 @@ import {
   type EmbedField,
 } from "oceanic.js";
 import { Err, Ok } from "ts-results-es";
-import {
-  htmlToMd,
-  isAdmin,
-  randomAvatar,
-  sendError,
-  trimString,
-} from "../utils";
-import { getFollowRole, followSuccess } from "./follow";
+import { htmlToMd, randomAvatar, sendError, trimString } from "../utils";
+import { getFollowRole } from "./follow";
+import type { Task } from "../task-logger";
 
-export default function info(client: Client) {
-  console.info("Registering info command");
-
+export default function info(client: Client, extraData: ExtraData) {
   client.application.createGlobalCommand({
     type: ApplicationCommandTypes.CHAT_INPUT,
     name: "info",
@@ -39,37 +32,23 @@ export default function info(client: Client) {
   });
 
   client.on("interactionCreate", async (interaction) => {
-    if (interaction.type == InteractionTypes.MESSAGE_COMPONENT) {
-      if (!interaction.data.customID.startsWith("follow:")) return;
-      interaction.defer(64);
-      const id = parseInt(interaction.data.customID.replace("follow:", ""));
-      const followRole = await getFollowRole(
-        id,
-        await isAdmin(interaction.user.id, interaction.guild!),
-      );
-
-      if (followRole == null) {
-        sendError(interaction, [
-          "Can't get following data",
-          "Either you have insufficient permission or the api request failed.",
-        ]);
-      }
-
-      followSuccess(interaction, followRole);
-    }
     if (interaction.type != InteractionTypes.APPLICATION_COMMAND) return;
     if (interaction.data.name != "info") return;
+
+    const task = extraData.logger.createTask(
+      "info",
+      "Initializing info request from",
+      interaction.user.id,
+    );
 
     await interaction.defer();
 
     const id = interaction.data.options.getInteger("id", true);
-    const res = await api(id);
+    const res = await api(id, task);
 
-    if (res.isErr()) return sendError(interaction, res.error);
+    if (res.isErr()) return sendError(interaction, res.error, task);
 
-    //get can follow
-
-    interaction.createFollowup({
+    await interaction.createFollowup({
       embeds: [res.value],
       components: [
         {
@@ -87,10 +66,12 @@ export default function info(client: Client) {
         },
       ],
     });
+    task.success("Info sent to " + interaction.user.id);
   });
 }
 
-export async function api(id: number): AsyncRes<Embed> {
+export async function api(id: number, task: Task): AsyncRes<Embed> {
+  task.pending("Requesting info from Anilist");
   type Media = {
     title: {
       english: string;
@@ -236,6 +217,8 @@ export async function api(id: number): AsyncRes<Embed> {
       },
     }),
   });
+
+  task.pending("Processing response");
 
   if (!response.ok)
     return new Err([response.statusText, response.body?.toString()]);

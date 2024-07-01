@@ -10,6 +10,7 @@ import {
 } from "oceanic.js";
 import { Err, Ok } from "ts-results-es";
 import { isAdmin, sendError, sendSuccess } from "../utils";
+import { Task } from "../task-logger";
 
 let queries: ExtraData["database"]["queries"];
 let guild: Guild;
@@ -17,8 +18,6 @@ let guild: Guild;
 export default function follow(client: Client, extraData: ExtraData) {
   queries = extraData.database.queries;
   guild = extraData.defaultData.guild;
-
-  console.info("Registering follow command");
 
   client.application.createGlobalCommand({
     type: ApplicationCommandTypes.CHAT_INPUT,
@@ -37,17 +36,55 @@ export default function follow(client: Client, extraData: ExtraData) {
   });
 
   client.on("interactionCreate", async (interaction) => {
+    if (interaction.type == InteractionTypes.MESSAGE_COMPONENT) {
+      if (!interaction.data.customID.startsWith("follow:")) return;
+      const task = extraData.logger.createTask(
+        "flw(btn)",
+        "Initializing follow request from",
+        interaction.user.id,
+      );
+      await interaction.defer(64);
+      const id = parseInt(interaction.data.customID.replace("follow:", ""));
+
+      task.pending("Fetching role");
+      const followRole = await getFollowRole(
+        id,
+        await isAdmin(interaction.user.id, interaction.guild!),
+      );
+
+      if (followRole == null) {
+        sendError(
+          interaction,
+          [
+            "Can't get following data",
+            "Either you have insufficient permission or the api request failed.",
+          ],
+          task,
+        );
+      }
+
+      followSuccess(interaction, followRole, task);
+      return;
+    }
     if (interaction.type != InteractionTypes.APPLICATION_COMMAND) return;
     if (interaction.data.name != "follow") return;
+
+    const task = extraData.logger.createTask(
+      "follow",
+      "Initializing follow request from",
+      interaction.user.id,
+    );
 
     const id = interaction.data.options.getInteger("id", true);
 
     const dbRes: ArchivedDoc | null =
       extraData.database.queries.listFind.get(id) ||
       extraData.database.queries.archiveFind.get(id);
-    if (dbRes) return followSuccess(interaction, dbRes.role);
+    if (dbRes) return followSuccess(interaction, dbRes.role, task);
 
-    interaction.defer(64);
+    await interaction.defer(64);
+
+    task.pending("Fetching role");
 
     const followRole = await getFollowRole(
       id,
@@ -55,13 +92,17 @@ export default function follow(client: Client, extraData: ExtraData) {
     );
 
     if (followRole == null) {
-      sendError(interaction, [
-        "Can't get following data",
-        "Either you have insufficient permission or the api request failed.",
-      ]);
+      sendError(
+        interaction,
+        [
+          "Following data not found",
+          "Insufficient permission or the api request failed.",
+        ],
+        task,
+      );
     }
 
-    followSuccess(interaction, followRole);
+    followSuccess(interaction, followRole, task);
   });
 }
 
@@ -138,13 +179,15 @@ async function createEntry(
 export async function followSuccess(
   interaction: CommandInteraction | ComponentInteraction,
   role: string,
+  task: Task,
 ) {
   await interaction.member?.addRole(role);
 
-  sendSuccess(interaction, [
-    "Entry Added",
-    `Added <@&${role}> to your following list.`,
-  ]);
+  sendSuccess(
+    interaction,
+    ["Entry Added", `Added <@&${role}> to your following list.`],
+    task,
+  );
 }
 
 function findFranchise(

@@ -1,6 +1,7 @@
 import type { Result } from "ts-results-es";
 import { Database, Statement } from "bun:sqlite";
 import type { ForumChannel, Guild, TextChannel } from "oceanic.js";
+import type TaskLogger from "./task-logger";
 
 export {};
 
@@ -42,6 +43,7 @@ declare global {
       forum: ForumChannel;
       modChannel: TextChannel;
     };
+    logger: TaskLogger;
     getRole: (id: string) => Promise<Role>;
   };
 }

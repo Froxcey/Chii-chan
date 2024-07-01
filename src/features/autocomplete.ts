@@ -1,22 +1,35 @@
 import { Client } from "oceanic.js";
+import type { Task } from "../task-logger";
 
-export default function autocomplete(client: Client) {
-  console.info("Autocomplete registered");
-
+export default function autocomplete(client: Client, extraData: ExtraData) {
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isAutocompleteInteraction()) return;
+
+    const task = extraData.logger.createTask(
+      "ac",
+      "Initializing autocomplete request from",
+      interaction.user.id,
+    );
 
     const option = interaction.data.options.getFocused(true);
     if (option.name != "id") return;
 
-    const value = option.value;
+    const value = option.value as string;
 
-    console.info("Responding to autocomplete with query:", value);
-    interaction.result(value == "" ? [] : await api(value));
+    task.running("Autocomplete data:", value);
+
+    const result = value == "" ? [] : await api(value, task);
+
+    task.running("Sending response to client");
+
+    await interaction.result(result);
+
+    task.success("Autocomplete request sent to", interaction.user.id);
   });
 }
 
-async function api(data: string | number) {
+async function api(data: string | number, task: Task) {
+  task.pending("Requesting autocomplete from Anilist");
   type Media = {
     id: number;
     title: {
@@ -51,6 +64,8 @@ async function api(data: string | number) {
       },
     }),
   });
+
+  task.pending("Processing response");
 
   const content: Media[] = (await res.json()).data.Page.media;
 

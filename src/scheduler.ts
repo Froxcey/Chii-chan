@@ -1,12 +1,14 @@
-import { type Client } from "oceanic.js";
 import { getLimit } from "./utils";
 import { scheduleApi } from "./features/schedule";
 import { Err, Ok } from "ts-results-es";
 import { softDelete } from "./features/modTools/rm";
+import type { Task } from "./task-logger";
 
 let started = false;
 
-export default function scheduler(extraData: ExtraData) {
+export default function scheduler(extraData: ExtraData, initTask: Task) {
+  initTask.running("Initializing scheduler");
+
   const forum = extraData.defaultData.forum;
   const channel = extraData.defaultData.channel;
   const modChannel = extraData.defaultData.modChannel;
@@ -14,41 +16,52 @@ export default function scheduler(extraData: ExtraData) {
   if (started) return;
   started = true;
 
-  console.log(
-    "Available forum tags:",
+  initTask.running(
+    "Found forum tags:",
     forum.availableTags.map((val) => `${val.name} - ${val.id}`).join("; "),
   );
 
   setInterval(async () => {
+    const task = extraData.logger.createTask(
+      "scheduler",
+      "Scheduled task started",
+    );
     const now = Date.now();
 
     if (getLimit().getTime() - now > 86400000 - 60000) {
+      task.pending("Getting today's schedule from Anilist");
       const res = await scheduleApi(true);
       if (res.isOk()) {
+        task.pending("Sending response as announcement");
         res.value.footer = {
           text: "This is an automated message sent everyday at 6am JST",
         };
-        channel.createMessage({ embeds: [res.value] });
+        await channel.createMessage({ embeds: [res.value] });
+        task.running("Schedule sent");
       }
     }
 
     for (let doc of extraData.database.queries.listAll.all() as ScheduleDoc[]) {
       if (doc.nextTime < now / 1000) {
-        check(doc);
+        task.running(`${doc.title} is outdated`);
+        check(doc, task);
       }
 
       if (Math.abs(doc.nextTime - 300 - now / 1000) < 30) {
-        console.log(`${doc.title} is scheduled to air in 5 min`);
-        check(doc);
+        task.running(`${doc.title} is scheduled to air in 5 min`);
+        check(doc, task);
       }
 
       if (Math.abs(doc.nextTime - now / 1000) < 30) {
+        task.running("Sending airing notification for", doc.title);
+
         const role = (await extraData.getRole(doc.role))!;
 
         channel.createMessage({
           content: `> Episode \`${doc.nextEp}\` of ${role.mention} just aired\n`,
         });
-        return;
+        continue;
+        task.running("Creating discussion forum");
         forum.startThread({
           name: `${doc.title} ep ${doc.nextEp} discussion`,
           message: {
@@ -58,21 +71,24 @@ export default function scheduler(extraData: ExtraData) {
         });
 
         setTimeout(() => {
-          check(doc);
+          check(doc, task);
         }, 300000);
       }
     }
+    task.success("Scheduled task completed");
   }, 60000);
 
-  async function check(doc: ScheduleDoc) {
-    console.log("Checking", doc.id);
+  async function check(doc: ScheduleDoc, task: Task) {
+    task.running("Fetching Anilist id", doc.id.toString());
     const res = await airingApi(doc.id);
-    if (res.isErr()) return;
+    if (res.isErr()) return task.running("Fetch failed, aborting check");
     const val = res.value;
     if (!val.nextAiringEpisode) {
       const role = await extraData.getRole(doc.role);
+      task.running("Moving outdated entry to archive");
       softDelete(modChannel, doc, role);
     } else {
+      task.running("Check passed");
       extraData.database.queries.listUpdate.run(
         doc.id,
         val.nextAiringEpisode.episode,

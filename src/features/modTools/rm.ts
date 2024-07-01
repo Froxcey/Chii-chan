@@ -45,31 +45,49 @@ export default function rm(client: Client, extraData: ExtraData) {
     if (!interaction.isCommandInteraction()) return;
     if (interaction.data.name != "rm") return;
 
+    const task = extraData.logger.createTask(
+      "rm",
+      "Initializing rm request from",
+      interaction.user.id,
+    );
+
     interaction.defer();
 
     if (!(await isAdmin(interaction.member!.id, extraData.defaultData.guild)))
-      return sendError(interaction, [
-        "Insufficient permission",
-        "You don't have the permission to remove entries",
-      ]);
+      return sendError(
+        interaction,
+        [
+          "Insufficient permission",
+          "You don't have the permission to remove entries",
+        ],
+        task,
+      );
 
     const role = interaction.data.options.getRole("role", true);
     if (
       !queries.listFindRole.get(role.id) &&
       !queries.archiveFindRole.get(role.id)
     )
-      return sendError(interaction, [
-        "Invalid Role",
-        "The anime associated with this role could not be found. Maybe this is not an anime role?",
-      ]);
+      return sendError(
+        interaction,
+        [
+          "Invalid Role",
+          "The anime associated with this role could not be found. Maybe this is not an anime role?",
+        ],
+        task,
+      );
 
     const name = role.name;
     del(role);
 
-    sendSuccess(interaction, [
-      "Entry Removed",
-      name + " and the associated data has been successfully wiped",
-    ]);
+    sendSuccess(
+      interaction,
+      [
+        "Entry Removed",
+        name + " and the associated data has been successfully wiped",
+      ],
+      task,
+    );
   });
 }
 

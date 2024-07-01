@@ -33,13 +33,23 @@ export default function rename(client: Client, extraData: ExtraData) {
     if (!interaction.isCommandInteraction()) return;
     if (interaction.data.name != "rename") return;
 
+    const task = extraData.logger.createTask(
+      "rename",
+      "Initializing rename request from",
+      interaction.user.id,
+    );
+
     interaction.defer();
 
     if (!(await isAdmin(interaction.member!.id, extraData.defaultData.guild)))
-      return sendError(interaction, [
-        "Insufficient permission",
-        "You don't have the permission to remove entries",
-      ]);
+      return sendError(
+        interaction,
+        [
+          "Insufficient permission",
+          "Insufficient permission to remove this entry",
+        ],
+        task,
+      );
 
     const role = interaction.data.options.getRole("role", true);
     const name = interaction.data.options.getString("name", true);
@@ -48,9 +58,10 @@ export default function rename(client: Client, extraData: ExtraData) {
 
     await role.edit({ name: name });
 
-    sendSuccess(interaction, [
-      "Entry renamed",
-      oldName + " has been renamed to " + name,
-    ]);
+    sendSuccess(
+      interaction,
+      ["Entry renamed", oldName + " has been renamed to " + name],
+      task,
+    );
   });
 }

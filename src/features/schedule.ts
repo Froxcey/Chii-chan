@@ -9,10 +9,9 @@ import {
 import { getLimit, randomAvatar, sendError } from "../utils";
 import { Err, Ok } from "ts-results-es";
 import { DateTime } from "luxon";
+import type { Task } from "../task-logger";
 
-export default function schedule(client: Client) {
-  console.info("Registering schedule command");
-
+export default function schedule(client: Client, extraData: ExtraData) {
   client.application.createGlobalCommand({
     type: ApplicationCommandTypes.CHAT_INPUT,
     name: "schedule",
@@ -32,22 +31,30 @@ export default function schedule(client: Client) {
     if (interaction.type != InteractionTypes.APPLICATION_COMMAND) return;
     if (interaction.data.name != "schedule") return;
 
-    console.info("Responding to schedule command");
+    const task = extraData.logger.createTask(
+      "schedule",
+      "Initializing schedule request from",
+      interaction.user.id,
+    );
 
     await interaction.defer();
     const today = interaction.data.options.getBoolean("today", false) || false;
-    const res = await scheduleApi(today);
+    const res = await scheduleApi(today, task);
 
-    if (res.isErr()) return sendError(interaction, res.error);
+    if (res.isErr()) return sendError(interaction, res.error, task);
+
+    task.pending("Sending response");
 
     await interaction.createFollowup({
       embeds: [res.value],
     });
-    console.info("Schedule sent to", interaction.user.id);
+
+    task.success("Schedule sent to", interaction.user.id);
   });
 }
 
-export async function scheduleApi(today: boolean): AsyncRes<Embed> {
+export async function scheduleApi(today: boolean, task: Task): AsyncRes<Embed> {
+  task.pending("Requesting schedule from Anilist");
   type Media = {
     airingAt: number;
     episode: number;
@@ -101,7 +108,7 @@ export async function scheduleApi(today: boolean): AsyncRes<Embed> {
     }),
   });
 
-  console.info("Got response from Anilist");
+  task.pending("Processing response");
 
   const schedule: Media[] = (await res.json()).data.Page.airingSchedules;
   if (schedule.length == 0)

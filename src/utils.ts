@@ -3,6 +3,7 @@ import type {
   ComponentInteraction,
   Guild,
 } from "oceanic.js";
+import type { Task } from "./task-logger";
 
 export function currentSeason() {
   const now = new Date();
@@ -54,9 +55,10 @@ export function trimString(str: string, maxLength = 1024) {
 export async function sendError(
   interaction: CommandInteraction | ComponentInteraction,
   info: MyErr,
+  task: Task,
 ) {
   const [title, msg] = info;
-  console.error(title + ":", msg);
+  task.error(title + ":", msg || "");
   interaction.createFollowup({
     embeds: [
       {
@@ -88,8 +90,10 @@ export async function isAdmin(memberID: string, guild: Guild) {
 export async function sendSuccess(
   interaction: CommandInteraction | ComponentInteraction,
   info: MyErr,
+  task: Task,
 ) {
   const [title, msg] = info;
+  task.success(title + ":", msg || "");
   interaction.createFollowup({
     embeds: [
       {
