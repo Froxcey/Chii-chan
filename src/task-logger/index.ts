@@ -17,7 +17,7 @@ export default class TaskLogger {
   }
 }
 
-type Status = "running" | "pending" | "error" | "success";
+type Status = "running" | "pending" | "warn" | "error" | "success";
 export class Task {
   private id: number;
   private name: string;
@@ -64,6 +64,12 @@ export class Task {
     this.write();
     this.update();
   }
+  warn(...content: string[]) {
+    this.content = content.join(" ");
+    this.status = "warn";
+    this.write();
+    this.update();
+  }
   error(...content: string[]) {
     this.content = content.join(" ");
     this.status = "error";
@@ -106,6 +112,7 @@ const prefix = {
     ],
     len: 9,
   },
+  warn: { seq: ["\x1b[33m! \x1b[1mwarning\x1b[0m"], len: 9 },
   success: { seq: ["\x1b[92m✔ \x1b[1msuccess\x1b[0m"], len: 9 },
   error: { seq: ["\x1b[31m⨯ \x1b[1merror\x1b[0m"], len: 7 },
 };

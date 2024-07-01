@@ -30,7 +30,7 @@ export default function scheduler(extraData: ExtraData, initTask: Task) {
 
     if (getLimit().getTime() - now > 86400000 - 60000) {
       task.pending("Getting today's schedule from Anilist");
-      const res = await scheduleApi(true);
+      const res = await scheduleApi(true, task);
       if (res.isOk()) {
         task.pending("Sending response as announcement");
         res.value.footer = {
@@ -81,7 +81,7 @@ export default function scheduler(extraData: ExtraData, initTask: Task) {
   async function check(doc: ScheduleDoc, task: Task) {
     task.running("Fetching Anilist id", doc.id.toString());
     const res = await airingApi(doc.id);
-    if (res.isErr()) return task.running("Fetch failed, aborting check");
+    if (res.isErr()) return task.warn("Fetch failed, aborting check");
     const val = res.value;
     if (!val.nextAiringEpisode) {
       const role = await extraData.getRole(doc.role);

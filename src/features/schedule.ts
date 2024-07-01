@@ -114,7 +114,7 @@ export async function scheduleApi(today: boolean, task: Task): AsyncRes<Embed> {
   if (schedule.length == 0)
     return new Err([
       "Schedule not found",
-      "Everything have finished airing for today, please come back tomorrow.",
+      "Everything has finished airing for today, please come back tomorrow.",
     ]);
   const embed: Embed = {
     title: (today ? "Today's" : "Upcoming") + " airing schedule",
