@@ -15,6 +15,10 @@ export default class TaskLogger {
   createTask(name: string, ...msg: string[]) {
     return new Task(name, msg.join(" "), this.writer);
   }
+  error(name: string, ...content: string[]) {
+    const msg = format("error", name, content.join(" "), 0);
+    newEntry(msg.text, msg.len);
+  }
 }
 
 type Status = "running" | "pending" | "warn" | "error" | "success";
@@ -36,7 +40,7 @@ export class Task {
     this.updateClock = setInterval(() => {
       this.styleState++;
       this.update();
-    }, 350);
+    }, 250);
   }
   private update() {
     const formatted = format(

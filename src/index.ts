@@ -35,4 +35,8 @@ client.on("ready", async () => {
   initTask.success("Running as", client.user.tag);
 });
 
+client.on("error", (err) => {
+  logger.error("process", err.toString());
+});
+
 client.connect();

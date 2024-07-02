@@ -66,6 +66,7 @@ export default function follow(client: Client, extraData: ExtraData) {
       followSuccess(interaction, followRole, task);
       return;
     }
+
     if (interaction.type != InteractionTypes.APPLICATION_COMMAND) return;
     if (interaction.data.name != "follow") return;
 
@@ -75,14 +76,15 @@ export default function follow(client: Client, extraData: ExtraData) {
       interaction.user.id,
     );
 
+    await interaction.defer(64);
+
     const id = interaction.data.options.getInteger("id", true);
 
     const dbRes: ArchivedDoc | null =
       extraData.database.queries.listFind.get(id) ||
       extraData.database.queries.archiveFind.get(id);
-    if (dbRes) return followSuccess(interaction, dbRes.role, task);
 
-    await interaction.defer(64);
+    if (dbRes) return followSuccess(interaction, dbRes.role, task);
 
     task.pending("Fetching role");
 
@@ -181,13 +183,18 @@ export async function followSuccess(
   role: string,
   task: Task,
 ) {
-  await interaction.member?.addRole(role);
-
-  sendSuccess(
-    interaction,
-    ["Entry Added", `Added <@&${role}> to your following list.`],
-    task,
-  );
+  interaction.member
+    ?.addRole(role)
+    .then(() => {
+      sendSuccess(
+        interaction,
+        ["Entry Added", `Added <@&${role}> to your following list.`],
+        task,
+      );
+    })
+    .catch((e) => {
+      sendError(interaction, ["Failed to add role", e], task);
+    });
 }
 
 function findFranchise(

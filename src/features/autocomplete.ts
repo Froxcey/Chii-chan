@@ -24,7 +24,7 @@ export default function autocomplete(client: Client, extraData: ExtraData) {
 
     await interaction.result(result);
 
-    task.success("Autocomplete request sent to", interaction.user.id);
+    task.success("Autocomplete results sent to", interaction.user.id);
   });
 }
 
