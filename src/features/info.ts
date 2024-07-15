@@ -137,7 +137,7 @@ export async function api(id: number, task: Task): AsyncRes<Embed> {
   } & (
     | {
         status: "RELEASING" | "NOT_YET_RELEASED";
-        nextAiringEpisode: { timeUntilAiring: number };
+        nextAiringEpisode: { airingAt: number };
       }
     | {
         status: "FINISHED" | "CANCELLED" | "HIATUS";
@@ -175,7 +175,7 @@ export async function api(id: number, task: Task): AsyncRes<Embed> {
       }
       isAdult
       nextAiringEpisode {
-        timeUntilAiring
+        airingAt
       }
       siteUrl
       characters(perPage: 6, role: MAIN) {
@@ -247,7 +247,7 @@ export async function api(id: number, task: Task): AsyncRes<Embed> {
   if (info.status == "RELEASING") {
     fields.push({
       name: "Next episode",
-      value: `<t:${info.nextAiringEpisode!.timeUntilAiring}:R>`,
+      value: `<t:${info.nextAiringEpisode!.airingAt}:R>`,
       inline: true,
     });
   } else

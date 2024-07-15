@@ -56,6 +56,9 @@ export class Task {
       `${Date.now()} [Task #${this.id} ${this.name}] ${this.status} ${this.content}\n`,
     );
   }
+  writeError(content: Error) {
+    this.writer.write(content.toString());
+  }
   running(...content: string[]) {
     this.content = content.join(" ");
     this.status = "running";

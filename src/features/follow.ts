@@ -43,7 +43,7 @@ export default function follow(client: Client, extraData: ExtraData) {
         "Initializing follow request from",
         interaction.user.id,
       );
-      await interaction.defer(64);
+      await interaction.defer();
       const id = parseInt(interaction.data.customID.replace("follow:", ""));
 
       task.pending("Fetching role");
@@ -76,7 +76,7 @@ export default function follow(client: Client, extraData: ExtraData) {
       interaction.user.id,
     );
 
-    await interaction.defer(64);
+    await interaction.defer();
 
     const id = interaction.data.options.getInteger("id", true);
 
@@ -192,8 +192,9 @@ export async function followSuccess(
         task,
       );
     })
-    .catch((e) => {
-      sendError(interaction, ["Failed to add role", e], task);
+    .catch((e: Error) => {
+      sendError(interaction, ["Failed to add role", e.message], task);
+      task.writeError(e);
     });
 }
 

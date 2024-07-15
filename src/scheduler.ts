@@ -4,17 +4,12 @@ import { Err, Ok } from "ts-results-es";
 import { softDelete } from "./features/modTools/rm";
 import type { Task } from "./task-logger";
 
-let started = false;
-
 export default function scheduler(extraData: ExtraData, initTask: Task) {
   initTask.running("Initializing scheduler");
 
   const forum = extraData.defaultData.forum;
   const channel = extraData.defaultData.channel;
   const modChannel = extraData.defaultData.modChannel;
-
-  if (started) return;
-  started = true;
 
   initTask.running(
     "Found forum tags:",

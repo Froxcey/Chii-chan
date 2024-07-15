@@ -45,7 +45,7 @@ export default function drop(client: Client, extraData: ExtraData) {
         task,
       );
 
-    interaction.defer(64);
+    interaction.defer();
 
     task.pending("Removing role from user");
     await interaction.member?.removeRole(role.id);

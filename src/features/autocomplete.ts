@@ -22,9 +22,15 @@ export default function autocomplete(client: Client, extraData: ExtraData) {
 
     task.running("Sending response to client");
 
-    await interaction.result(result);
-
-    task.success("Autocomplete results sent to", interaction.user.id);
+    interaction
+      .result(result)
+      .then(() => {
+        task.success("Autocomplete results sent to", interaction.user.id);
+      })
+      .catch((e: TypeError) => {
+        task.error(e.name);
+        task.writeError(e);
+      });
   });
 }
 

@@ -15,7 +15,7 @@ const client = new Client({
 
 client.setMaxListeners(20);
 
-client.on("ready", async () => {
+client.once("ready", async () => {
   const data = await defaultData(client, initTask);
 
   const extraData = {
