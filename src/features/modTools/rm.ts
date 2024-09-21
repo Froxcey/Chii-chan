@@ -34,7 +34,7 @@ export default function rm(client: Client, extraData: ExtraData) {
   client.on("interactionCreate", async (interaction) => {
     if (interaction.isComponentInteraction()) {
       const id = interaction.data.customID;
-      if (id == "dismiss") interaction.message.delete();
+      if (id == "archive") interaction.message.delete();
       if (id.startsWith("rmrol:")) {
         const roleID = id.replace("rmrol:", "");
         del(await extraData.getRole(roleID));
@@ -109,16 +109,17 @@ export function softDelete(
         components: [
           {
             type: ComponentTypes.BUTTON,
+            style: ButtonStyles.PRIMARY,
+            customID: "archive",
+            emoji: { name: "🗄️" },
+            label: "Confirm archive",
+          },
+          {
+            type: ComponentTypes.BUTTON,
             style: ButtonStyles.DANGER,
             customID: "rmrol:" + doc.role,
             emoji: { name: "🗑️" },
             label: "Remove",
-          },
-          {
-            type: ComponentTypes.BUTTON,
-            style: ButtonStyles.SECONDARY,
-            customID: "🗄️",
-            label: "Archive",
           },
         ],
         type: ComponentTypes.ACTION_ROW,
@@ -126,6 +127,9 @@ export function softDelete(
     ],
   });
   role.edit({ color: 0x151f2e });
+  modChannel.guild.editRolePositions([
+    { id: role.id, position: modChannel.guild.roles.size },
+  ]);
   queries.toArchive1.run(doc.id);
   queries.toArchive2.run(doc.id);
 }

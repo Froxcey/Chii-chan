@@ -28,13 +28,14 @@ declare global {
         | "listInsert"
         | "listAll"
         | "listUpdate"
-        | "listDelRole",
-        | "toArchive"
+        | "listDelRole"
+        | "toArchive1"
+        | "toArchive2"
         | "archiveFind"
         | "archiveFindRole"
         | "archiveInsert"
         | "archiveDelRole",
-        Statement
+        Statement<any, any[]>
       >;
     };
     defaultData: {

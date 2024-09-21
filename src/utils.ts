@@ -58,7 +58,7 @@ export async function sendError(
   task: Task,
 ) {
   const [title, msg] = info;
-  task.error(title + ":", msg || "");
+  task.error(title);
   interaction.createFollowup({
     embeds: [
       {

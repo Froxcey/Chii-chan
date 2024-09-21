@@ -61,6 +61,7 @@ export default function follow(client: Client, extraData: ExtraData) {
           ],
           task,
         );
+        return;
       }
 
       followSuccess(interaction, followRole, task);
@@ -80,9 +81,8 @@ export default function follow(client: Client, extraData: ExtraData) {
 
     const id = interaction.data.options.getInteger("id", true);
 
-    const dbRes: ArchivedDoc | null =
-      extraData.database.queries.listFind.get(id) ||
-      extraData.database.queries.archiveFind.get(id);
+    const dbRes = (extraData.database.queries.listFind.get(id) ||
+      extraData.database.queries.archiveFind.get(id)) as ArchivedDoc | null;
 
     if (dbRes) return followSuccess(interaction, dbRes.role, task);
 
@@ -97,11 +97,12 @@ export default function follow(client: Client, extraData: ExtraData) {
       sendError(
         interaction,
         [
-          "Following data not found",
-          "Insufficient permission or the api request failed.",
+          "Follow data not found",
+          "This could be caused by:\n- Insufficient permission\n- No airing date data to create entry\n- Fetching data from Anilist failed\nYou can\n- Try later\n- Ask an admin to help you\n~~- Bribe Frox with chocolate marshmellow cookies~~",
         ],
         task,
       );
+      return;
     }
 
     followSuccess(interaction, followRole, task);
@@ -118,7 +119,7 @@ export async function getFollowRole(id: number, admin: boolean, mock = false) {
   if (val.nextAiringEpisode) {
     return createEntry(id, val, admin, mock);
   }
-  return queries.archiveFind.get(id)?.role;
+  return queries.archiveFind.get(id)?.role as string | null;
 }
 
 async function createEntry(
@@ -130,9 +131,9 @@ async function createEntry(
   const franchiseRole = findFranchise(val.relations, []);
   if (franchiseRole) {
     if (val.nextAiringEpisode) {
-      if (mock) return true;
+      if (mock) return "";
       guild.editRole(franchiseRole, { color: 0x7bd555 });
-      queries.listInsert(
+      queries.listInsert.run(
         id,
         franchiseRole,
         val.nextAiringEpisode.episode,
@@ -140,7 +141,7 @@ async function createEntry(
         val.title.english || val.title.native,
       );
     } else {
-      queries.archiveInsert(id, franchiseRole);
+      queries.archiveInsert.run(id, franchiseRole);
     }
     return franchiseRole;
   }
@@ -151,8 +152,9 @@ async function createEntry(
       .sort((a, b) => a.length - b.length)[0]
       .replace("#", "");
   }
+  name = "アニメ：" + name;
   if (val.nextAiringEpisode) {
-    if (mock) return true;
+    if (mock) return "";
     const role = await guild.createRole({
       name,
       color: 0x7bd555,
@@ -168,13 +170,13 @@ async function createEntry(
     return role.id;
   }
   if (!admin) return null;
-  if (mock) return true;
+  if (mock) return "";
   const role = await guild.createRole({
     name,
     color: 0x151f2e,
     mentionable: false,
   });
-  queries.archiveInsert(id, role.id);
+  queries.archiveInsert.run(id, role.id);
   return role.id;
 }
 
