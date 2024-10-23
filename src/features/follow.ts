@@ -11,6 +11,7 @@ import {
 import { Err, Ok } from "ts-results-es";
 import { isAdmin, sendError, sendSuccess } from "../utils";
 import { Task } from "../task-logger";
+import { setEntry } from "./modTools/rename";
 
 let queries: ExtraData["database"]["queries"];
 let guild: Guild;
@@ -176,6 +177,7 @@ async function createEntry(
     color: 0x151f2e,
     mentionable: false,
   });
+  setEntry(role);
   queries.archiveInsert.run(id, role.id);
   return role.id;
 }

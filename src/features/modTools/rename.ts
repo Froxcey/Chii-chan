@@ -2,9 +2,16 @@ import {
   ApplicationCommandOptionTypes,
   ApplicationCommandTypes,
   InteractionContextTypes,
+  Role,
   type Client,
 } from "oceanic.js";
 import { isAdmin, sendError, sendSuccess } from "../../utils";
+
+var lastEntry: Role | null = null;
+
+export function setEntry(role: Role) {
+  lastEntry = role;
+}
 
 export default function rename(client: Client, extraData: ExtraData) {
   client.application.createGlobalCommand({
@@ -16,7 +23,6 @@ export default function rename(client: Client, extraData: ExtraData) {
         type: ApplicationCommandOptionTypes.ROLE,
         name: "role",
         description: "Entry to rename",
-        required: true,
       },
       {
         type: ApplicationCommandOptionTypes.STRING,
@@ -51,12 +57,19 @@ export default function rename(client: Client, extraData: ExtraData) {
         task,
       );
 
-    const role = interaction.data.options.getRole("role", true);
+    const role = interaction.data.options.getRole("role", false) || lastEntry;
+    if (!role)
+      return sendError(
+        interaction,
+        ["Unknown role", "Please mention a role"],
+        task,
+      );
+
     const name = interaction.data.options.getString("name", true);
 
     const oldName = role.name;
 
-    await role.edit({ name: name });
+    await role.edit({ name: "アニメ：" + name });
 
     sendSuccess(
       interaction,
