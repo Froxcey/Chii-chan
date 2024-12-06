@@ -96,21 +96,28 @@ export async function scheduleApi(today: boolean, task: Task): AsyncRes<Embed> {
     }
   }`;
 
-  const res = await fetch("https://graphql.anilist.co", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      query: query,
-      variables: null,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        query: query,
+        variables: null,
+      }),
+    });
+  } catch (e) {
+    return new Err(["Anilist fetch failed", "Maybe Anilist broke???"]);
+  }
 
   task.pending("Processing response");
 
-  const schedule: Media[] = (await res.json()).data.Page.airingSchedules;
+  const data = (await res.json()).data;
+  if (!data) return new Err(["No data", "Maybe Anilist broke???"]);
+  const schedule: Media[] = data.Page.airingSchedules;
   if (schedule.length == 0)
     return new Err([
       "Schedule not found",
